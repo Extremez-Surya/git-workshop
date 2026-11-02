@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Top 4 Wall · Intro to FOSS & Git</title>
+<style>
+  :root { --bg: #f7f7f5; --fg: #1a1a1a; --muted: #666; --card: #fff; --line: #e3e3e0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--fg); }
+  header { padding: 28px 32px 8px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; }
+  h1 { margin: 0; font-size: 28px; }
+  .count { color: var(--muted); }
+  .top { padding: 4px 32px 16px; color: var(--muted); }
+  .top b { color: var(--fg); }
+  .top span + span::before { content: " · "; }
+  main { padding: 8px 32px 48px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .who { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .who img { width: 36px; height: 36px; border-radius: 50%; background: var(--line); }
+  .who .name { font-weight: 600; }
+  .who .user { color: var(--muted); font-size: 13px; }
+  .posters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .poster { aspect-ratio: 2 / 3; border-radius: 4px; color: #fff; padding: 6px; font-size: 12px; font-weight: 600;
+            display: flex; align-items: flex-end; overflow: hidden; word-break: break-word; }
+  .line { margin: 10px 0 0; color: var(--muted); font-size: 14px; }
+  .empty { padding: 32px; color: var(--muted); }
+  .new { animation: pop 1.2s ease-out; }
+  @keyframes pop { from { box-shadow: 0 0 0 4px #4c9a2a; } to { box-shadow: 0 0 0 0 transparent; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Top 4 Wall</h1>
+  <span class="count" id="count"></span>
+</header>
+<div class="top" id="top"></div>
+<main id="wall"></main>
+<script>
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const hue = (s) => { let h = 0; for (const ch of s.toLowerCase()) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h % 360; };
+  let seen = null;
+
+  function render({ cards, top }) {
+    document.getElementById('count').textContent = `${cards.length} contributor${cards.length === 1 ? '' : 's'}`;
+
+    const topEl = document.getElementById('top');
+    topEl.replaceChildren();
+    if (top.length) {
+      topEl.append('Most picked: ');
+      for (const t of top) { const s = el('span'); s.append(el('b', null, t.title), ` ×${t.n}`); topEl.append(s); }
+    }
+
+    const wall = document.getElementById('wall');
+    wall.replaceChildren();
+    if (!cards.length) wall.append(el('div', 'empty', 'No cards yet. Yours could be first.'));
+    for (const c of cards) {
+      const card = el('article', 'card');
+      if (seen && !seen.has(c.user)) card.classList.add('new');
+      const who = el('div', 'who');
+      const img = el('img'); img.alt = ''; img.loading = 'lazy'; img.src = `https://github.com/${encodeURIComponent(c.user)}.png?size=72`;
+      const names = el('div'); names.append(el('div', 'name', c.name), el('div', 'user', '@' + c.user));
+      who.append(img, names);
+      const posters = el('div', 'posters');
+      for (const t of c.top4) { const p = el('div', 'poster', t); p.style.background = `hsl(${hue(t)} 45% 32%)`; posters.append(p); }
+      card.append(who, posters);
+      if (c.line) card.append(el('p', 'line', c.line));
+      wall.append(card);
+    }
+    seen = new Set(cards.map((c) => c.user));
+  }
+
+  async function load() {
+    try {
+      const res = await fetch(`cards.json?t=${Date.now()}`, { cache: 'no-store' });
+      if (res.ok) render(await res.json());
+    } catch (e) { /* offline: keep what we have */ }
+  }
+  load();
+  setInterval(load, 20000);
+</script>
+</body>
+</html>

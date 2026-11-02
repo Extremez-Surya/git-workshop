@@ -1,0 +1,99 @@
+/* Global styles. Slidev loads this file automatically. */
+
+:root {
+  --accent: #2f6f3e;
+  --hl: #ffe08a;
+}
+
+.slidev-layout {
+  font-size: 1.15rem;
+}
+
+.slidev-layout h1 {
+  font-weight: 700;
+  color: #111;
+}
+
+/* Code blocks as dark terminal windows. */
+.slidev-code-wrapper,
+.slidev-code {
+  border-radius: 8px !important;
+}
+.slidev-code {
+  font-size: 0.95rem !important;
+  line-height: 1.5 !important;
+  padding: 0.9rem 1.1rem !important;
+}
+
+/* Big centred question slides. */
+.question h1 {
+  font-size: 3.2rem;
+  text-align: center;
+}
+
+/* Small grey text: credits, links. */
+.muted {
+  color: #777;
+  font-size: 0.85rem;
+}
+
+/* "Remember this?" card on lab slides. */
+.recap {
+  border-left: 4px solid var(--accent);
+  background: #f2f7f3;
+  padding: 0.4rem 0.9rem;
+  border-radius: 4px;
+  margin-bottom: 0.8rem;
+  font-size: 0.95rem;
+}
+
+/* Highlight a word inline. */
+mark {
+  background: var(--hl);
+  padding: 0 0.2em;
+  border-radius: 3px;
+}
+
+/* Tables a bit tighter. */
+.slidev-layout table {
+  font-size: 0.95rem;
+}
+
+/* Force dark terminal background (Slidev's light theme sets a light one). */
+.slidev-code,
+.slidev-code-wrapper pre {
+  background: #0d1117 !important;
+}
+.slidev-code .slidev-code-dishonored {
+  opacity: 0.45;
+}
+
+/* Diagrams centred. */
+.mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+/* Inline code: light pill, not a dark box. */
+:not(pre) > code {
+  background: #eceeea !important;
+  color: #1a1a1a !important;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* Image credit, bottom-right of a slide. */
+.credit {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 0.8rem;
+  font-size: 0.7rem;
+  color: #888;
+}
+
+/* Centre block images (Rachel Carmena diagrams). */
+.slidev-layout img.mx-auto {
+  display: block;
+}

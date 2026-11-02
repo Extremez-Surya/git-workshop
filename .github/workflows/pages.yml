@@ -1,0 +1,53 @@
+# Builds slides (→ /) and the wall (→ /wall/) and publishes them to GitHub Pages.
+# One-time: Settings → Pages → Source: "GitHub Actions".
+
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: slides/package-lock.json
+
+      - name: Build slides
+        working-directory: slides
+        run: |
+          npm ci
+          npx slidev build slides.md --base /${{ github.event.repository.name }}/ --out ../dist
+
+      - name: Build wall
+        run: node wall/build.cjs dist/wall
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

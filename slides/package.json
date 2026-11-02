@@ -1,0 +1,17 @@
+{
+  "name": "foss-git-workshop-slides",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "slidev slides.md --open",
+    "build": "slidev build slides.md --out ../dist",
+    "export": "slidev export slides.md --output ../workshop.pdf"
+  },
+  "devDependencies": {
+    "@slidev/cli": "^53.0.0",
+    "@slidev/theme-default": "^0.25.0"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}

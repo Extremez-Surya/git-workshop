@@ -1,0 +1,10 @@
+// Codespaces fallback: if Git won't install on your laptop, open your fork in a Codespace.
+// Git is preinstalled and already logged in to GitHub.
+{
+  "name": "git-workshop",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "postCreateCommand": "git config --global core.editor 'code --wait' && git config --global init.defaultBranch main",
+  "customizations": {
+    "codespaces": { "openFiles": ["CONTRIBUTING.md"] }
+  }
+}

@@ -1,0 +1,111 @@
+# Checks participant-card PRs, comments with what's wrong, and (optionally) merges them.
+#
+# Auto-merge is OFF unless the repo variable AUTO_MERGE is "true":
+#   Settings → Secrets and variables → Actions → Variables → New: AUTO_MERGE = true
+# Plan: merge the first few PRs by hand on the projector, then flip it on.
+#
+# Security: this uses pull_request_target (needed to comment/merge on fork PRs).
+# It checks out the BASE branch only and reads the PR's file through the API as text.
+# It never checks out or runs code from the PR. Keep it that way.
+
+name: Check card
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: card-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out base branch (trusted code only)
+        uses: actions/checkout@v4
+
+      - name: Validate card
+        uses: actions/github-script@v7
+        env:
+          AUTO_MERGE: ${{ vars.AUTO_MERGE }}
+        with:
+          script: |
+            const { parseCard } = require(`${process.env.GITHUB_WORKSPACE}/wall/card.cjs`);
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+            const MARK = '<!-- card-check -->';
+
+            const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: pr.number });
+            const touchesCards = files.some((f) => f.filename.startsWith('participants/'));
+            if (!touchesCards || ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(pr.author_association)) {
+              core.info('Not a card PR (or from a maintainer). Leaving it for a human.');
+              return;
+            }
+
+            const expected = `participants/${author}.md`;
+            const problems = [];
+            if (pr.base.ref !== 'main') problems.push('Open the PR against the `main` branch.');
+            if (files.length !== 1) {
+              problems.push(`Change exactly one file: \`${expected}\`. This PR changes ${files.length}:\n` +
+                files.map((f) => `  - \`${f.filename}\``).join('\n'));
+            } else if (files[0].filename.toLowerCase() !== expected.toLowerCase()) {
+              problems.push(`Your file must be named \`${expected}\` (your GitHub username). Found \`${files[0].filename}\`.`);
+            } else if (files[0].status === 'removed') {
+              problems.push('This PR deletes the file instead of adding it.');
+            }
+
+            let card = null;
+            if (!problems.length) {
+              if (!pr.head.repo) {
+                problems.push('Could not find your fork. Did you delete it?');
+              } else {
+                const { data } = await github.rest.repos.getContent({
+                  owner: pr.head.repo.owner.login, repo: pr.head.repo.name, path: files[0].filename, ref: pr.head.sha,
+                });
+                if (data.size > 2000) problems.push('Your file is too big. Keep it short.');
+                else {
+                  card = parseCard(Buffer.from(data.content, 'base64').toString('utf8'));
+                  problems.push(...card.errors);
+                }
+              }
+            }
+
+            const ok = problems.length === 0;
+            const autoMerge = process.env.AUTO_MERGE === 'true';
+            const body = ok
+              ? `${MARK}\n✅ Looks good, @${author}!` +
+                (autoMerge ? ' Merging now. Watch the wall.' : ' A maintainer will merge it shortly.') +
+                `\n\nYour top 4: ${card.data.top4.map((t) => `**${t}**`).join(', ')}`
+              : `${MARK}\n❌ Almost there, @${author}. Fix these, then commit and push again (the same PR updates):\n\n` +
+                problems.map((p) => `- ${p}`).join('\n') +
+                `\n\nCompare with [participants/exitflynn.md](${context.serverUrl}/${owner}/${repo}/blob/main/participants/exitflynn.md).`;
+
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: pr.number });
+            const mine = comments.find((c) => c.user.type === 'Bot' && c.body.includes(MARK));
+            if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number: pr.number, body });
+
+            if (!ok) {
+              core.setFailed(problems.join('\n'));
+              return;
+            }
+            if (!autoMerge) return;
+
+            try {
+              await github.rest.pulls.merge({
+                owner, repo, pull_number: pr.number, sha: pr.head.sha, merge_method: 'squash',
+                commit_title: `Add ${author}'s top 4 (#${pr.number})`,
+              });
+            } catch (e) {
+              core.warning(`Merge failed: ${e.message}`);
+              return;
+            }
+            // Merges made with GITHUB_TOKEN don't trigger push workflows, so kick the Pages build directly.
+            await github.rest.actions.createWorkflowDispatch({ owner, repo, workflow_id: 'pages.yml', ref: 'main' });
