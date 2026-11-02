@@ -35,7 +35,16 @@ jobs:
           npm ci
           npx slidev build slides.md --base /${{ github.event.repository.name }}/ --out ../dist
 
+      - name: Restore poster cache
+        uses: actions/cache@v4
+        with:
+          path: wall/.cache
+          key: tmdb-${{ github.run_id }}
+          restore-keys: tmdb-
+
       - name: Build wall
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
         run: node wall/build.cjs dist/wall
 
       - uses: actions/upload-pages-artifact@v3

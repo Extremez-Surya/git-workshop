@@ -3,53 +3,98 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Top 4 Wall · Intro to FOSS & Git</title>
+<title>What's BCAS watching</title>
 <style>
-  :root { --bg: #f7f7f5; --fg: #1a1a1a; --muted: #666; --card: #fff; --line: #e3e3e0; }
+  :root { --bg: #f7f7f5; --fg: #1a1a1a; --muted: #666; --card: #fff; --line: #e3e3e0; --accent: #2f6f3e; }
   * { box-sizing: border-box; }
   body { margin: 0; font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--fg); }
-  header { padding: 28px 32px 8px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; }
-  h1 { margin: 0; font-size: 28px; }
+  header { padding: 28px 32px 4px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; }
+  h1 { margin: 0; font-size: 32px; }
+  h2 { margin: 0 0 12px; font-size: 18px; }
   .count { color: var(--muted); }
-  .top { padding: 4px 32px 16px; color: var(--muted); }
-  .top b { color: var(--fg); }
-  .top span + span::before { content: " · "; }
-  main { padding: 8px 32px 48px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+  section { padding: 16px 32px; }
+
+  .top10 { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 1100px) { .top10 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .rank { position: relative; }
+  .rank .n { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,.75); color: #fff; font-weight: 700;
+             font-size: 13px; border-radius: 4px; padding: 1px 6px; }
+  .rank .title { margin-top: 6px; font-size: 13px; font-weight: 600; line-height: 1.25; }
+  .rank .picks { color: var(--muted); font-size: 12px; }
+
+  main { padding: 8px 32px 24px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
   .who { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .who img { width: 36px; height: 36px; border-radius: 50%; background: var(--line); }
   .who .name { font-weight: 600; }
   .who .user { color: var(--muted); font-size: 13px; }
   .posters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-  .poster { aspect-ratio: 2 / 3; border-radius: 4px; color: #fff; padding: 6px; font-size: 12px; font-weight: 600;
-            display: flex; align-items: flex-end; overflow: hidden; word-break: break-word; }
+
+  .poster { aspect-ratio: 2 / 3; border-radius: 4px; overflow: hidden; background: var(--line); }
+  .poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .poster.text { color: #fff; padding: 6px; font-size: 12px; font-weight: 600; display: flex; align-items: flex-end; word-break: break-word; }
+
   .line { margin: 10px 0 0; color: var(--muted); font-size: 14px; }
   .empty { padding: 32px; color: var(--muted); }
   .new { animation: pop 1.2s ease-out; }
-  @keyframes pop { from { box-shadow: 0 0 0 4px #4c9a2a; } to { box-shadow: 0 0 0 0 transparent; } }
+  @keyframes pop { from { box-shadow: 0 0 0 4px var(--accent); } to { box-shadow: 0 0 0 0 transparent; } }
+  footer { padding: 8px 32px 32px; color: var(--muted); font-size: 12px; }
+  footer a { color: inherit; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Top 4 Wall</h1>
+  <h1>What's BCAS watching</h1>
   <span class="count" id="count"></span>
 </header>
-<div class="top" id="top"></div>
+
+<section id="top-section" hidden>
+  <h2>Top 10</h2>
+  <div class="top10" id="top"></div>
+</section>
+
+<section style="padding-bottom:0"><h2 style="margin:0">Everyone&apos;s top 4</h2></section>
 <main id="wall"></main>
+
+<footer id="footer">
+  Add yours: <a href="https://github.com/exitflynn/git-workshop/blob/main/CONTRIBUTING.md">github.com/exitflynn/git-workshop</a>
+  <span id="tmdb" hidden> · Movie posters from <a href="https://www.themoviedb.org/">TMDB</a>. This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
+</footer>
+
 <script>
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const hue = (s) => { let h = 0; for (const ch of s.toLowerCase()) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h % 360; };
   let seen = null;
+  let last = null;
 
-  function render({ cards, top }) {
-    document.getElementById('count').textContent = `${cards.length} contributor${cards.length === 1 ? '' : 's'}`;
+  function poster(movie, label) {
+    const title = movie.year ? `${movie.title} (${movie.year})` : movie.title;
+    if (movie.poster) {
+      const box = el('div', 'poster');
+      const img = el('img'); img.src = movie.poster; img.alt = title; img.title = title; img.loading = 'lazy';
+      img.onerror = () => box.replaceWith(textPoster(label || movie.title));
+      box.append(img);
+      return box;
+    }
+    return textPoster(label || movie.title);
+  }
+  function textPoster(text) {
+    const p = el('div', 'poster text', text); p.title = text; p.style.background = `hsl(${hue(text)} 45% 32%)`; return p;
+  }
+
+  function render({ cards, movies, top, tmdb }) {
+    document.getElementById('count').textContent = `${cards.length} ${cards.length === 1 ? 'person' : 'people'}`;
+    document.getElementById('tmdb').hidden = !tmdb;
 
     const topEl = document.getElementById('top');
     topEl.replaceChildren();
-    if (top.length) {
-      topEl.append('Most picked: ');
-      for (const t of top) { const s = el('span'); s.append(el('b', null, t.title), ` ×${t.n}`); topEl.append(s); }
-    }
+    document.getElementById('top-section').hidden = !top.length;
+    top.forEach((t, i) => {
+      const m = movies[t.key];
+      const r = el('div', 'rank');
+      r.append(poster(m), el('span', 'n', `#${i + 1}`), el('div', 'title', m.title), el('div', 'picks', `${t.n} pick${t.n === 1 ? '' : 's'}`));
+      topEl.append(r);
+    });
 
     const wall = document.getElementById('wall');
     wall.replaceChildren();
@@ -62,7 +107,7 @@
       const names = el('div'); names.append(el('div', 'name', c.name), el('div', 'user', '@' + c.user));
       who.append(img, names);
       const posters = el('div', 'posters');
-      for (const t of c.top4) { const p = el('div', 'poster', t); p.style.background = `hsl(${hue(t)} 45% 32%)`; posters.append(p); }
+      for (const t of c.top4) posters.append(poster(movies[t.key], t.typed));
       card.append(who, posters);
       if (c.line) card.append(el('p', 'line', c.line));
       wall.append(card);
@@ -73,7 +118,11 @@
   async function load() {
     try {
       const res = await fetch(`cards.json?t=${Date.now()}`, { cache: 'no-store' });
-      if (res.ok) render(await res.json());
+      if (!res.ok) return;
+      const text = await res.text();
+      if (text === last) return; // unchanged: don't re-render (avoids poster flicker)
+      last = text;
+      render(JSON.parse(text));
     } catch (e) { /* offline: keep what we have */ }
   }
   load();

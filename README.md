@@ -12,33 +12,6 @@ Workshop by Akshit Tyagi ([@exitflynn](https://github.com/exitflynn)).
 3. [CONTRIBUTING.md](CONTRIBUTING.md): lab stage 2, your first pull request.
 4. [TROUBLESHOOTING.md](TROUBLESHOOTING.md): when something breaks.
 
-## Maintainers
-
-```
-slides/        Slidev deck: slides.md (text, diagrams, speaker notes)
-participants/  one card per attendee: <github-username>.md
-wall/          card parser + wall page; build: node wall/build.cjs
-.github/       validate-pr.yml (checks + auto-merges cards), pages.yml (deploys slides + wall)
-.devcontainer/ Codespaces fallback
-```
-
-**Edit slides:**
-
-```sh
-cd slides
-npm install
-npm run dev        # live preview at http://localhost:3030, presenter view at /presenter
-npm run build      # static HTML → ../dist
-npm run export     # PDF (needs: npx playwright install chromium)
-```
-
-**Preview the wall:** `node wall/build.cjs && npx serve dist/wall`
-
-**One-time GitHub setup:**
-1. Settings → Pages → Source: **GitHub Actions**.
-2. For auto-merge: Settings → Secrets and variables → Actions → Variables → `AUTO_MERGE` = `true`. Leave unset to merge by hand.
-3. Settings → General → Pull Requests: allow **squash merging**.
-
 ## License
 
 [MIT](LICENSE), except the third-party images below.
