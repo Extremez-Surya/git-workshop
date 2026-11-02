@@ -674,9 +674,9 @@ You invented a <mark>branch</mark>: a name pointing at the latest snapshot.
 
 ---
 
-# 5 · Zoe joins
+# 5 · Linus joins
 
-Zoe works on her laptop, offline, for a week. She makes `snapshot-114`.
+Linus works on his laptop, offline, for a week. He makes `snapshot-114`.
 
 You also made `snapshot-114`. 💥
 
@@ -705,15 +705,15 @@ You invented <mark>commit IDs</mark> and a <mark>distributed</mark> system. Work
 
 # 6 · Combining work
 
-You built feature A. Zoe built feature B. You want both.
+You built feature A. Linus built feature B. You want both.
 
 <v-click>
 
 ```text
 snapshot-5baf58a/message
   parent: b5a5780      ← yours
-  parent: 60df96e      ← Zoe's
-  Merge Zoe's work
+  parent: 60df96e      ← Linus's
+  Merge Linus's work
 ```
 
 A snapshot with **two parents**: a <mark>merge</mark>.
@@ -786,7 +786,7 @@ You invented <mark>diff</mark>.
 | `parent:` line | parent commit |
 | `branches` file | **branch** |
 | hash name | commit ID |
-| copying snapshots to Zoe | **push / pull** |
+| copying snapshots to Linus | **push / pull** |
 | snapshot with two parents | **merge** |
 
 <div class="muted">Based on "The Git Parable", Tom Preston-Werner (2009)</div>
@@ -810,7 +810,7 @@ You invented <mark>diff</mark>.
 ⏱ 1:03
 
 - Same as the parable. Working dir = working/. Staging = staging/. Local repository = all the snapshots (hidden .git folder).
-- Remote repository = Zoe's copy, or GitHub.
+- Remote repository = Linus's copy, or GitHub.
 - Learn these four names. Every Git message uses them.
 -->
 
@@ -1323,7 +1323,7 @@ Parable step 6, for real.
 <div class="credit">Rachel M. Carmena, "How to teach Git" · CC BY-NC 4.0</div>
 
 <!--
-- Send your new snapshots to the remote. Parable: copying snapshots to Zoe.
+- Send your new snapshots to the remote. Parable: copying snapshots to Linus.
 - First push on Windows: browser opens to sign in.
 -->
 
@@ -1336,7 +1336,7 @@ Parable step 6, for real.
 <div class="credit">Rachel M. Carmena, "How to teach Git" · CC BY-NC 4.0</div>
 
 <!--
-- Get Zoe's new snapshots into my local repo. My files don't change.
+- Get Linus's new snapshots into my local repo. My files don't change.
 -->
 
 ---
