@@ -4,13 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>What's BCAS watching</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root { --bg: #f7f7f5; --fg: #1a1a1a; --muted: #666; --card: #fff; --line: #e3e3e0; --accent: #2f6f3e; }
   * { box-sizing: border-box; }
-  body { margin: 0; font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--fg); }
+  body { margin: 0; font: 16px/1.45 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--fg); }
   header { padding: 28px 32px 4px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; }
-  h1 { margin: 0; font-size: 32px; }
-  h2 { margin: 0 0 12px; font-size: 18px; }
+  h1, h2, .rank .title, .who .name { font-family: "Bricolage Grotesque", "Inter", system-ui, sans-serif; }
+  h1 { margin: 0; font-size: 44px; font-weight: 800; letter-spacing: -0.02em; }
+  h2 { margin: 0 0 12px; font-size: 20px; font-weight: 700; }
   .count { color: var(--muted); }
   section { padding: 16px 32px; }
 
